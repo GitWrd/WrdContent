@@ -66,10 +66,10 @@ public class WrdContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mDatabaseHelper = new DatabaseHelper(
-                getContext(),        // the application context
-                DBNAME
-        );
+//        mDatabaseHelper = new DatabaseHelper(
+//                getContext(),        // the application context
+//                DBNAME
+//        );
 
         return true;
     }

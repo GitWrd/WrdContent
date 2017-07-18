@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.List;
+
 
 /**
  * Created by WDijkstra on 27-Jun-17.
@@ -12,40 +14,47 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private Context context;
-    private String databaseName;
+    private DatabaseProps databaseProps;
 
-    public static final int DATABASE_VERSION = 2;
-    public static final String TABLE = "Counters";
-    public static final String _ID = "_id";
-    public static final String LABEL = "label";
-    public static final String COUNT = "count";
-    public static final String LOCKED = "locked";
-
-    // A string that defines the SQL statement for creating a table
-    private static final String SQL_CREATE_DB = "CREATE TABLE " +
-            TABLE +                    // Table's name
-            " ( " +                    // The columns in the table
-            _ID + " INTEGER PRIMARY KEY, " +
-            LABEL + " TEXT, " +
-            COUNT + " INTEGER, " +
-            LOCKED + " INTEGER )";
-
-    public DatabaseHelper (Context context, String databaseName) {
-        super(context, databaseName, null, DATABASE_VERSION);
+    public DatabaseHelper (Context context, DatabaseProps databaseProps ) {
+        super(context, databaseProps.databaseName, null, databaseProps.databaseVersion);
         this.context = context;
-        this.databaseName = databaseName;
+        this.databaseProps = databaseProps;
     }
 
     public void onCreate(SQLiteDatabase db) {
+        String sqlCreateDb = "CREATE TABLE " +
+                databaseProps.table +      // Table's name
+                " ( ";                     // The columns in the table
+
+        for (int i=0; i<databaseProps.keyNames.length; i++ ) {
+            if (databaseProps.keyTypes[i] == int.class) {
+                sqlCreateDb = sqlCreateDb + databaseProps.keyNames[i] + " INTEGER";
+            }
+            else {
+                sqlCreateDb = sqlCreateDb + databaseProps.keyNames[i] + " TEXT";
+            }
+
+            if (i==0) {
+                // First key will be used as "primary key"
+                sqlCreateDb = sqlCreateDb + " PRIMARY KEY";
+            }
+            if ((i + 1) < databaseProps.keyNames.length)
+            {
+                // Add comma, when more keys available
+                sqlCreateDb = sqlCreateDb + ", ";
+            }
+        }
+        sqlCreateDb = sqlCreateDb + " )";
 
         // Creates the main table
-        db.execSQL(SQL_CREATE_DB);
+        db.execSQL(sqlCreateDb);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int i, int i1) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // For now, on upgrade, delete database and create new one
-        context.deleteDatabase(databaseName);
+        context.deleteDatabase(databaseProps.databaseName);
         onCreate(db);
     }
 }
