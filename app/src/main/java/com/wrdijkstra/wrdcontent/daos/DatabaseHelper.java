@@ -1,11 +1,16 @@
 package com.wrdijkstra.wrdcontent.daos;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -27,24 +32,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 databaseProps.table +      // Table's name
                 " ( ";                     // The columns in the table
 
-        for (int i=0; i<databaseProps.keyNames.length; i++ ) {
-            if (databaseProps.keyTypes[i] == int.class) {
-                sqlCreateDb = sqlCreateDb + databaseProps.keyNames[i] + " INTEGER";
-            }
-            else {
-                sqlCreateDb = sqlCreateDb + databaseProps.keyNames[i] + " TEXT";
-            }
 
-            if (i==0) {
-                // First key will be used as "primary key"
-                sqlCreateDb = sqlCreateDb + " PRIMARY KEY";
-            }
-            if ((i + 1) < databaseProps.keyNames.length)
+        Set<Map.Entry<String, Object>> s=databaseProps.keys.valueSet();
+        Iterator itr = s.iterator();
+
+        while(itr.hasNext()) {
+            Map.Entry me = (Map.Entry)itr.next();
+            String key = me.getKey().toString();
+            String value =  me.getValue().toString();
+
+            sqlCreateDb = sqlCreateDb + key + " " + value;
+            if (itr.hasNext())
             {
                 // Add comma, when more keys available
                 sqlCreateDb = sqlCreateDb + ", ";
             }
         }
+
         sqlCreateDb = sqlCreateDb + " )";
 
         // Creates the main table

@@ -17,27 +17,33 @@ import java.util.ArrayList;
 
 public class CounterDao {
     protected static final String DATABASE_NAME = "dbWrd";
-    protected static final int DATABASE_VERSION = 5;
+    protected static final int DATABASE_VERSION = 7;
     protected static final String TABLE = "Counters";
     protected static final String _ID = "_id";
     protected static final String LABEL = "label";
     protected static final String COUNT = "count";
     protected static final String LOCKED = "locked";
 
-    protected static final String[] KEY_NAMES =   {_ID      , LABEL       , COUNT    , LOCKED   };
-    protected static final Class<?>[] KEY_TYPES = {int.class, String.class, int.class, int.class};
-
-    protected static final DatabaseProps DB_PROPS = new DatabaseProps(DATABASE_NAME, DATABASE_VERSION, TABLE, KEY_NAMES, KEY_TYPES);
-
     private Context context;
+    private ContentValues keys;
+    private DatabaseProps databaseProps;
+
 
     public CounterDao(Context context) {
         this.context = context;
+
+        keys = new ContentValues();
+        keys.put(_ID   , "INTEGER PRIMARY KEY");
+        keys.put(LABEL , "TEXT"   );
+        keys.put(COUNT , "INTEGER");
+        keys.put(LOCKED, "INTEGER");
+
+        databaseProps = new DatabaseProps(DATABASE_NAME, DATABASE_VERSION, TABLE, keys);
     }
 
     public ArrayList<CounterVo> getAll() {
         ArrayList<CounterVo> list = new ArrayList<>();
-        SQLiteDatabase db = new DatabaseHelper(context, DB_PROPS).getWritableDatabase();
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         Cursor cursor = db.query(TABLE, null, null, null, null, null, null );
         while(cursor.moveToNext()) {
             CounterVo counter = new CounterVo();
@@ -54,7 +60,7 @@ public class CounterDao {
     }
 
     public CounterVo get(int id) {
-        SQLiteDatabase db = new DatabaseHelper(context, DB_PROPS).getWritableDatabase();
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         String[] selectionArgs = {Integer.toString(id)};
         Cursor cursor = db.query(TABLE, null, _ID + "=?", selectionArgs, null, null, null );
         CounterVo counter = null;
@@ -72,7 +78,7 @@ public class CounterDao {
 
     public long insert (CounterVo counter) {
         long num;
-        SQLiteDatabase db = new DatabaseHelper(context, DB_PROPS).getWritableDatabase();
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         ContentValues values = new ContentValues();
         if(counter.getId()>0) {
             values.put(_ID,counter.getId());
@@ -94,7 +100,7 @@ public class CounterDao {
     public long update (CounterVo counter) {
         long num;
         String[] selectionArgs = {Integer.toString(counter.getId())};
-        SQLiteDatabase db = new DatabaseHelper(context, DB_PROPS).getWritableDatabase();
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         ContentValues values = new ContentValues();
         if(counter.getId()>0) {
             values.put(_ID,counter.getId());
@@ -110,7 +116,7 @@ public class CounterDao {
     }
 
     public void delete (int id) {
-        SQLiteDatabase db = new DatabaseHelper(context, DB_PROPS).getWritableDatabase();
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         String[] selectionArgs = {Integer.toString(id)};
         db.delete( TABLE, _ID + "=?", selectionArgs );
 
@@ -122,7 +128,7 @@ public class CounterDao {
     }
 
     public void deleteAll () {
-        SQLiteDatabase db = new DatabaseHelper(context, DB_PROPS).getWritableDatabase();
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         db.delete( TABLE, null, null );
 
         db.close();
