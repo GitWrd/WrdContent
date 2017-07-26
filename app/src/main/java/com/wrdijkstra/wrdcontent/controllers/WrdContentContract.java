@@ -9,6 +9,8 @@ import android.provider.BaseColumns;
  */
 
 public class WrdContentContract {
+    protected static final String TABLE = "counters";
+
     public static final String AUTHORITY =
             "com.wrdijkstra.wrdcontent.provider";
 
@@ -28,14 +30,14 @@ public class WrdContentContract {
          */
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE +
-                        "/com.wrdijkstra.wrdcontent.counters";
+                        "/com.wrdijkstra.wrdcontent." + TABLE;
 
         /**
          * The mime type of a single item.
          */
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE +
-                        "/com.wrdijkstra.wrdcontent.counters";
+                        "/com.wrdijkstra.wrdcontent." + TABLE;
 
         /**
          * A projection of all columns

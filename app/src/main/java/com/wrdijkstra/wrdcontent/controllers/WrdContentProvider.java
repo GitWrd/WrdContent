@@ -1,6 +1,8 @@
 package com.wrdijkstra.wrdcontent.controllers;
 
+import com.wrdijkstra.wrdcontent.daos.CounterDao;
 import com.wrdijkstra.wrdcontent.daos.DatabaseHelper;
+import com.wrdijkstra.wrdcontent.daos.DatabaseProps;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -13,13 +15,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 public class WrdContentProvider extends ContentProvider {
-    private static final String DBNAME = "wrdDb";
+    protected static final String DATABASE_NAME = "dbWrd";
+    protected static final int DATABASE_VERSION = 7;
+    protected static final String DATABASE_TABLE = "Counters";
+
     private static final int COUNTERS = 1;
     private static final int COUNTER_ID = 2;
     private static final UriMatcher URI_MATCHER;
 
-    private DatabaseHelper mDatabaseHelper;
-    private SQLiteDatabase db;
+    private CounterDao counterDao;
 
     static {
         URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
@@ -36,8 +40,17 @@ public class WrdContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        int count;
+
+        if ( uri.equals(WrdContentContract.Counters.CONTENT_URI) == true) {
+            count = counterDao.delete(selection,selectionArgs);
+        }
+        else {
+            throw new IllegalArgumentException("Unsupported URI: " + uri);
+        }
+
+        getContext().getContentResolver().notifyChange(uri,null);
+        return count;
     }
 
     @Override
@@ -60,16 +73,32 @@ public class WrdContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
+        if ( uri.equals(WrdContentContract.Counters.CONTENT_URI) == true) {
+            counterDao.insert(values);
+            getContext().getContentResolver().notifyChange(uri,null);
+            return WrdContentContract.Counters.CONTENT_URI;
+        }
+        else {
+            return null;
+        }
+
     }
 
     @Override
+//    public CounterDao(Context context, String databaseName, int databaseVersion, String table, ContentValues keys) {
     public boolean onCreate() {
-//        mDatabaseHelper = new DatabaseHelper(
-//                getContext(),        // the application context
-//                DBNAME
-//        );
+        ContentValues keys = new ContentValues();
+        keys.put(WrdContentContract.CommonColumns._ID   , "INTEGER PRIMARY KEY");
+        keys.put(WrdContentContract.CommonColumns.LABEL , "TEXT"   );
+        keys.put(WrdContentContract.CommonColumns._COUNT , "INTEGER");
+        keys.put(WrdContentContract.CommonColumns.LOCKED, "INTEGER");
+
+        counterDao = new CounterDao(
+                getContext(),        // the application context
+                DATABASE_NAME,
+                DATABASE_VERSION,
+                DATABASE_TABLE,
+                keys );
 
         return true;
     }
@@ -77,11 +106,26 @@ public class WrdContentProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        return null;
+        if ( uri.equals(WrdContentContract.Counters.CONTENT_URI) == true) {
+            return counterDao.query(projection, selection, selectionArgs, sortOrder);
+        }
+        else {
+            return null;
+        }
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {
-        return 0;
+        int count;
+
+        if ( uri.equals(WrdContentContract.Counters.CONTENT_URI) == true) {
+            count = counterDao.update(contentValues, s, strings);
+        }
+        else {
+            throw new IllegalArgumentException("Unsupported URI: " + uri);
+        }
+
+        getContext().getContentResolver().notifyChange(uri,null);
+        return count;
     }
 }

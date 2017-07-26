@@ -5,6 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
+import android.provider.BaseColumns;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.wrdijkstra.wrdcontent.vos.CounterVo;
@@ -16,101 +19,25 @@ import java.util.ArrayList;
  */
 
 public class CounterDao {
-    protected static final String DATABASE_NAME = "dbWrd";
-    protected static final int DATABASE_VERSION = 7;
-    protected static final String TABLE = "Counters";
-    protected static final String _ID = "_id";
-    protected static final String LABEL = "label";
-    protected static final String COUNT = "count";
-    protected static final String LOCKED = "locked";
-
     private Context context;
-    private ContentValues keys;
     private DatabaseProps databaseProps;
 
 
-    public CounterDao(Context context) {
+    public CounterDao(Context context, String databaseName, int databaseVersion, String table, ContentValues keys) {
         this.context = context;
-
-        keys = new ContentValues();
-        keys.put(_ID   , "INTEGER PRIMARY KEY");
-        keys.put(LABEL , "TEXT"   );
-        keys.put(COUNT , "INTEGER");
-        keys.put(LOCKED, "INTEGER");
-
-        databaseProps = new DatabaseProps(DATABASE_NAME, DATABASE_VERSION, TABLE, keys);
+        databaseProps = new DatabaseProps(databaseName, databaseVersion, table, keys);
     }
 
-    public ArrayList<CounterVo> getAll() {
-        ArrayList<CounterVo> list = new ArrayList<>();
-        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
-        Cursor cursor = db.query(TABLE, null, null, null, null, null, null );
-        while(cursor.moveToNext()) {
-            CounterVo counter = new CounterVo();
-            counter.setId(cursor.getInt(cursor.getColumnIndex(_ID)));
-            counter.setLabel(cursor.getString(cursor.getColumnIndex(LABEL)));
-            counter.setCount(cursor.getInt(cursor.getColumnIndex(COUNT)));
-            counter.setLocked(cursor.getInt(cursor.getColumnIndex(LOCKED)) == 1);
-
-            list.add(counter);
-        }
-        cursor.close();
-        db.close();
-        return list;
-    }
-
-    public CounterVo get(int id) {
-        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
-        String[] selectionArgs = {Integer.toString(id)};
-        Cursor cursor = db.query(TABLE, null, _ID + "=?", selectionArgs, null, null, null );
-        CounterVo counter = null;
-        if(cursor.moveToFirst()) {
-            counter = new CounterVo();
-            counter.setId(cursor.getInt(cursor.getColumnIndex(_ID)));
-            counter.setLabel(cursor.getString(cursor.getColumnIndex(LABEL)));
-            counter.setCount(cursor.getInt(cursor.getColumnIndex(COUNT)));
-            counter.setLocked(cursor.getInt(cursor.getColumnIndex(LOCKED)) == 1);
-        }
-        cursor.close();
-        db.close();
-        return counter;
-    }
-
-    public long insert (CounterVo counter) {
+    public long insert (ContentValues keys) {
         long num;
         SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
-        ContentValues values = new ContentValues();
-        if(counter.getId()>0) {
-            values.put(_ID,counter.getId());
-        }
-        values.put(LABEL, counter.getLabel());
-        values.put(COUNT, counter.getCount());
-        values.put(LOCKED, counter.isLocked());
 
-        num = db.insert(TABLE,null,values);
+        num = db.insert(databaseProps.table,null,keys);
         db.close();
 
         if (num < 0) {
-            Log.w("INSERT", "Failed inserting ID \"" + Integer.toString(counter.getId()) + "\"" );
+            Log.w("INSERT", "Failed inserting ID \"" + keys.getAsString(BaseColumns._ID) + "\"" );
         }
-
-        return num;
-    }
-
-    public long update (CounterVo counter) {
-        long num;
-        String[] selectionArgs = {Integer.toString(counter.getId())};
-        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
-        ContentValues values = new ContentValues();
-        if(counter.getId()>0) {
-            values.put(_ID,counter.getId());
-        }
-        values.put(LABEL, counter.getLabel());
-        values.put(COUNT, counter.getCount());
-        values.put(LOCKED, counter.isLocked());
-
-        num = db.update(TABLE, values, _ID + "=?", selectionArgs);
-        db.close();
 
         return num;
     }
@@ -118,23 +45,43 @@ public class CounterDao {
     public void delete (int id) {
         SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
         String[] selectionArgs = {Integer.toString(id)};
-        db.delete( TABLE, _ID + "=?", selectionArgs );
+        db.delete( databaseProps.table, BaseColumns._ID + "=?", selectionArgs );
 
         db.close();
     }
 
-    public void delete (CounterVo counter) {
-        delete(counter.getId());
+    public int delete(String selection, String[] selectionArgs) {
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
+
+        return db.delete( databaseProps.table, selection, selectionArgs );
     }
 
     public void deleteAll () {
         SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
-        db.delete( TABLE, null, null );
+        db.delete( databaseProps.table, null, null );
 
         db.close();
     }
 
+    public Cursor query(String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) {
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables( databaseProps.table);
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
+
+        Cursor cursor = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+
+        Log.d("CounterDao", "queried records: "+cursor.getCount());
+        return cursor;
+    }
+
+    public int update(ContentValues contentValues, String whereClause, String[] whereArgs) {
+        SQLiteDatabase db = new DatabaseHelper(context, databaseProps).getWritableDatabase();
+
+        return db.update(databaseProps.table, contentValues, whereClause, whereArgs);
+    }
+
     public void deleteDatabase () {
-        context.deleteDatabase(DATABASE_NAME);
+        context.deleteDatabase(databaseProps.databaseName);
     }
 }
