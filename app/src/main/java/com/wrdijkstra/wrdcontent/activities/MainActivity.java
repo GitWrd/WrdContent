@@ -28,19 +28,21 @@ public class MainActivity extends AppCompatActivity {
 
         ContentResolver resolver = getContentResolver();
 
-//        counter.put(WrdContentContract.Counters._ID, 15 );
-//        counter.put(WrdContentContract.Counters.LABEL, "allo?" );
-//        counter.put(WrdContentContract.Counters.LOCKED, "false" );
-//        counter.put(WrdContentContract.Counters._COUNT, 21 );
-//        resolver.insert(WrdContentContract.Counters.CONTENT_URI, counter);
-//
-//        counter.put(WrdContentContract.Counters._ID, 13 );
-//        counter.put(WrdContentContract.Counters.LABEL, "huh?" );
-//        counter.put(WrdContentContract.Counters.LOCKED, "true" );
-//        counter.put(WrdContentContract.Counters._COUNT, 97 );
-//        resolver.insert(WrdContentContract.Counters.CONTENT_URI, counter);
+        counter.put(WrdContentContract.Counters._ID, 15 );
+        counter.put(WrdContentContract.Counters.LABEL, "allo?" );
+        counter.put(WrdContentContract.Counters.LOCKED, "false" );
+        counter.put(WrdContentContract.Counters._COUNT, 21 );
+        resolver.insert(WrdContentContract.Counters.CONTENT_URI, counter);
+
+        counter.put(WrdContentContract.Counters._ID, 13 );
+        counter.put(WrdContentContract.Counters.LABEL, "huh?" );
+        counter.put(WrdContentContract.Counters.LOCKED, "true" );
+        counter.put(WrdContentContract.Counters._COUNT, 97 );
+        resolver.insert(WrdContentContract.Counters.CONTENT_URI, counter);
 
         counterUpdate.put(WrdContentContract.Counters._ID, 13 );
+        counterUpdate.put(WrdContentContract.Counters._COUNT, 117 );
+        resolver.update(WrdContentContract.Counters.CONTENT_URI, counterUpdate, WrdContentContract.Counters._ID + "=?", new String[]{counterUpdate.getAsString(WrdContentContract.Counters._ID)});
 
         Cursor cursor  = resolver.query(WrdContentContract.Counters.CONTENT_URI, null, null, null, WrdContentContract.Counters.SORT_ORDER_DEFAULT );
         if (cursor.moveToFirst()){
