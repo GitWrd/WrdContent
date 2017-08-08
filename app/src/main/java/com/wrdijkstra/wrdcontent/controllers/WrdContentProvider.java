@@ -1,15 +1,11 @@
 package com.wrdijkstra.wrdcontent.controllers;
 
 import com.wrdijkstra.wrdcontent.daos.CounterDao;
-import com.wrdijkstra.wrdcontent.daos.DatabaseHelper;
-import com.wrdijkstra.wrdcontent.daos.DatabaseProps;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
